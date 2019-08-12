@@ -1,4 +1,5 @@
 import json
+import time
 import torch
 import pickle
 import numpy as np
@@ -175,4 +176,6 @@ def main():
 
 
 if __name__ == '__main__':
+    time1 = time.time()
     main()
+    print("total time: {:.1f}s".format(time.time() - time1))
