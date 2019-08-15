@@ -52,12 +52,15 @@ class Complex(torch.nn.Module):
 class DistMult(torch.nn.Module):
     def __init__(self, num_entities, num_relations):
         super(DistMult, self).__init__()
+        # entities向量和rel向量
         self.emb_e = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
         self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
+
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
     def init(self):
+        # 初始化为正态分布结果
         xavier_normal_(self.emb_e.weight.data)
         xavier_normal_(self.emb_rel.weight.data)
 
@@ -80,8 +83,10 @@ class DistMult(torch.nn.Module):
 class ConvE(torch.nn.Module):
     def __init__(self, num_entities, num_relations):
         super(ConvE, self).__init__()
+        # entities向量和rel向量
         self.emb_e = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
         self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
+
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.hidden_drop = torch.nn.Dropout(Config.dropout)
         self.feature_map_drop = torch.nn.Dropout2d(Config.feature_map_dropout)
@@ -96,6 +101,7 @@ class ConvE(torch.nn.Module):
         print(num_entities, num_relations)
 
     def init(self):
+        # 初始化为正态分布结果
         xavier_normal_(self.emb_e.weight.data)
         xavier_normal_(self.emb_rel.weight.data)
 
@@ -112,7 +118,7 @@ class ConvE(torch.nn.Module):
         x= F.relu(x)
         x = self.feature_map_drop(x)
         x = x.view(Config.batch_size, -1)
-        #print(x.size())
+        # print(x.size())
         x = self.fc(x)
         x = self.hidden_drop(x)
         x = self.bn2(x)
