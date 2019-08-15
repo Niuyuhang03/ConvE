@@ -35,10 +35,10 @@ Config.parse_argv(sys.argv)
 
 Config.cuda = True
 Config.embedding_dim = 200
-#Logger.GLOBAL_LOG_LEVEL = LogLevel.DEBUG
+# Logger.GLOBAL_LOG_LEVEL = LogLevel.DEBUG
 
 
-#model_name = 'DistMult_{0}_{1}'.format(Config.input_dropout, Config.dropout)
+# model_name = 'DistMult_{0}_{1}'.format(Config.input_dropout, Config.dropout)
 model_name = '{2}_{0}_{1}'.format(Config.input_dropout, Config.dropout, Config.model_name)
 epochs = 1000
 load = False
@@ -47,20 +47,14 @@ if Config.dataset is None:
 model_path = 'saved_models/{0}_{1}.model'.format(Config.dataset, model_name)
 
 
-''' Preprocess knowledge graph using spodernet. '''
+# Preprocess knowledge graph using spodernet.
 def preprocess(dataset_name, delete_data=False):
     full_path = 'data/{0}/e1rel_to_e2_full.json'.format(dataset_name)
     train_path = 'data/{0}/e1rel_to_e2_train.json'.format(dataset_name)
     dev_ranking_path = 'data/{0}/e1rel_to_e2_ranking_dev.json'.format(dataset_name)
     test_ranking_path = 'data/{0}/e1rel_to_e2_ranking_test.json'.format(dataset_name)
 
-    keys2keys = {}
-    keys2keys['e1'] = 'e1' # entities
-    keys2keys['rel'] = 'rel' # relations
-    keys2keys['rel_eval'] = 'rel' # relations
-    keys2keys['e2'] = 'e1' # entities
-    keys2keys['e2_multi1'] = 'e1' # entity
-    keys2keys['e2_multi2'] = 'e1' # entity
+    keys2keys = {'e1': 'e1', 'rel': 'rel', 'rel_eval': 'rel', 'e2': 'e1', 'e2_multi1': 'e1', 'e2_multi2': 'e1'}
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
     d = DatasetStreamer(input_keys)
     d.add_stream_processor(JsonLoaderProcessors())
@@ -70,11 +64,10 @@ def preprocess(dataset_name, delete_data=False):
     d.set_path(full_path)
     p = Pipeline(Config.dataset, delete_data, keys=input_keys, skip_transformation=True)
     p.add_sent_processor(ToLower())
-    p.add_sent_processor(CustomTokenizer(lambda x: x.split(' ')),keys=['e2_multi1', 'e2_multi2'])
+    p.add_sent_processor(CustomTokenizer(lambda x: x.split(' ')), keys=['e2_multi1', 'e2_multi2'])
     p.add_token_processor(AddToVocab())
     p.execute(d)
     p.save_vocabs()
-
 
     # process train, dev and test sets and save them to hdf5
     p.skip_transformation = False
@@ -82,14 +75,15 @@ def preprocess(dataset_name, delete_data=False):
         d.set_path(path)
         p.clear_processors()
         p.add_sent_processor(ToLower())
-        p.add_sent_processor(CustomTokenizer(lambda x: x.split(' ')),keys=['e2_multi1', 'e2_multi2'])
+        p.add_sent_processor(CustomTokenizer(lambda x: x.split(' ')), keys=['e2_multi1', 'e2_multi2'])
         p.add_post_processor(ConvertTokenToIdx(keys2keys=keys2keys), keys=['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2'])
         p.add_post_processor(StreamToHDF5(name, samples_per_file=1000, keys=input_keys))
         p.execute(d)
 
 
 def main():
-    if Config.process: preprocess(Config.dataset, delete_data=True)
+    if Config.process:
+        preprocess(Config.dataset, delete_data=True)
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
     p = Pipeline(Config.dataset, keys=input_keys)
     p.load_vocabs()
@@ -101,9 +95,8 @@ def main():
     dev_rank_batcher = StreamBatcher(Config.dataset, 'dev_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
-
     if Config.model_name is None:
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
     elif Config.model_name == 'ConvE':
         model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)
     elif Config.model_name == 'DistMult':
@@ -114,8 +107,7 @@ def main():
         log.info('Unknown model: {0}', Config.model_name)
         raise Exception("Unknown model!")
 
-    train_batcher.at_batch_prepared_observers.insert(1,TargetIdx2MultiTarget(num_entities, 'e2_multi1', 'e2_multi1_binary'))
-
+    train_batcher.at_batch_prepared_observers.insert(1, TargetIdx2MultiTarget(num_entities, 'e2_multi1', 'e2_multi1_binary'))
 
     eta = ETAHook('train', print_every_x_batches=100)
     train_batcher.subscribe_to_events(eta)
@@ -162,7 +154,6 @@ def main():
             opt.step()
 
             train_batcher.state.loss = loss.cpu()
-
 
         print('saving to {0}'.format(model_path))
         torch.save(model.state_dict(), model_path)
