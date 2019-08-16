@@ -57,8 +57,11 @@ def preprocess(dataset_name, delete_data=False):
     rel_path = 'data/{0}/GAT_{1}.rel'.format(dataset_name, dataset_name)
 
     entity_feature = np.genfromtxt(entity_path, dtype=np.dtype(str))
+    entity_name = entity_feature[:, 0]
+    entity_feature = np.array(entity_feature[:, 1:], dtype=np.float32)
     rel_feature = np.genfromtxt(rel_path, dtype=np.dtype(str))
-
+    rel_name = rel_feature[:, 0]
+    rel_feature = np.array(rel_feature[:, 2:], dtype=np.float32)
 
     keys2keys = {'e1': 'e1', 'rel': 'rel', 'rel_eval': 'rel', 'e2': 'e1', 'e2_multi1': 'e1', 'e2_multi2': 'e1'}
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
@@ -86,12 +89,26 @@ def preprocess(dataset_name, delete_data=False):
         p.add_post_processor(StreamToHDF5(name, samples_per_file=1000, keys=input_keys))
         p.execute(d)
 
-    return
+    # sort entity_feature and rel_feature by p.state['vocab']['e1'].idx2token and p.state['vocab']['rel'].idx2token
+
+    e_idx_token = p.state['vocab']['e1'].idx2token
+    e_token = np.array([e_idx_token[idx] for idx in range(2, len(e_idx_token))])
+    emb_e_arg = [np.argwhere(entity_name==e) for e in e_token]
+    emb_e = entity_feature[np.array(emb_e_arg), :]
+
+    rel_idx_token = p.state['vocab']['rel'].idx2token
+    rel_token = np.array([rel_idx_token[idx] for idx in range(2, (len(rel_idx_token) - 2) / 2)])
+    emb_rel_arg = [np.argwhere(rel_name==rel) for rel in rel_token]
+    emb_rel = rel_feature[np.array(emb_rel_arg), :]
+    emb_rel_rev = 1 / emb_rel
+    emb_rel = np.concatenate((emb_rel, emb_rel_rev), axis=0)
+
+    return emb_e, emb_rel
 
 
 def main():
     if Config.process:
-        preprocess(Config.dataset, delete_data=True)
+        emb_e, emb_rel = preprocess(Config.dataset, delete_data=True)
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
     p = Pipeline(Config.dataset, keys=input_keys)
     p.load_vocabs()
@@ -138,7 +155,7 @@ def main():
         ranking_and_hits(model, test_rank_batcher, vocab, 'test_evaluation')
         ranking_and_hits(model, dev_rank_batcher, vocab, 'dev_evaluation')
     else:
-        model.init()
+        model.init(emb_e, emb_rel)
 
     total_param_size = []
     params = [value.numel() for value in model.parameters()]
@@ -150,9 +167,9 @@ def main():
         model.train()
         for i, str2var in enumerate(train_batcher):
             opt.zero_grad()
-            e1 = str2var['e1']
-            rel = str2var['rel']
-            e2_multi = str2var['e2_multi1_binary'].float()
+            e1 = str2var['e1']  # batch_size * 1
+            rel = str2var['rel']  # batch_size * 1
+            e2_multi = str2var['e2_multi1_binary'].float()  # batch_size * num_entities
             # label smoothing
             e2_multi = ((1.0-Config.label_smoothing_epsilon)*e2_multi) + (1.0/e2_multi.size(1))
 

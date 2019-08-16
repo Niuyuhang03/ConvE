@@ -4,3 +4,4 @@
 __pycache__/
 *.rel
 *.content
+saved_models/
