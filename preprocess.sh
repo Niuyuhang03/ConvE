@@ -21,4 +21,4 @@ python wrangle_KG.py FB15k-237
 # python wrangle_KG.py kinship
 python wrangle_KG.py FB15k-237_new
 python wrangle_KG.py WN18RR_new
-python wrangle_KG.py WN18RRR_sub30000_new
+python wrangle_KG.py WN18RR_sub30000_new
