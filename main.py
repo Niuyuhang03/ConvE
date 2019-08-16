@@ -53,6 +53,12 @@ def preprocess(dataset_name, delete_data=False):
     train_path = 'data/{0}/e1rel_to_e2_train.json'.format(dataset_name)
     dev_ranking_path = 'data/{0}/e1rel_to_e2_ranking_dev.json'.format(dataset_name)
     test_ranking_path = 'data/{0}/e1rel_to_e2_ranking_test.json'.format(dataset_name)
+    entity_path = 'data/{0}/GAT_{1}.content'.format(dataset_name, dataset_name)
+    rel_path = 'data/{0}/GAT_{1}.rel'.format(dataset_name, dataset_name)
+
+    entity_feature = np.genfromtxt(entity_path, dtype=np.dtype(str))
+    rel_feature = np.genfromtxt(rel_path, dtype=np.dtype(str))
+
 
     keys2keys = {'e1': 'e1', 'rel': 'rel', 'rel_eval': 'rel', 'e2': 'e1', 'e2_multi1': 'e1', 'e2_multi2': 'e1'}
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
@@ -79,6 +85,8 @@ def preprocess(dataset_name, delete_data=False):
         p.add_post_processor(ConvertTokenToIdx(keys2keys=keys2keys), keys=['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2'])
         p.add_post_processor(StreamToHDF5(name, samples_per_file=1000, keys=input_keys))
         p.execute(d)
+
+    return
 
 
 def main():
