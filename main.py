@@ -100,7 +100,7 @@ def preprocess(dataset_name, delete_data=False):
     rel_token = np.array([rel_idx_token[idx] for idx in range(2, (len(rel_idx_token) - 2) / 2)])
     emb_rel_arg = [np.argwhere(rel_name==rel) for rel in rel_token]
     emb_rel = rel_feature[np.array(emb_rel_arg), :]
-    emb_rel_rev = 1 / emb_rel
+    emb_rel_rev = -emb_rel
     emb_rel = np.concatenate((emb_rel, emb_rel_rev), axis=0)
 
     return emb_e, emb_rel
@@ -109,6 +109,10 @@ def preprocess(dataset_name, delete_data=False):
 def main():
     if Config.process:
         emb_e, emb_rel = preprocess(Config.dataset, delete_data=True)
+    # print("emb_rel: {}".format(emb_rel),
+    #       "emb_rel.shape: {}".format(emb_rel.shape),
+    #       "emb_e: {}".format(emb_e),
+    #       "emb_e.shape: {}".format(emb_e.shape))
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
     p = Pipeline(Config.dataset, keys=input_keys)
     p.load_vocabs()
