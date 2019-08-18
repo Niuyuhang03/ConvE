@@ -34,7 +34,6 @@ Config.backend = Backends.TORCH
 Config.parse_argv(sys.argv)
 
 Config.cuda = True
-Config.embedding_dim = 200
 # Logger.GLOBAL_LOG_LEVEL = LogLevel.DEBUG
 
 
@@ -105,6 +104,8 @@ def preprocess(dataset_name, delete_data=False):
     for idx in range(emb_rel.shape[0]):
         emb_rel_concat[idx * 2] = emb_rel[idx]
         emb_rel_concat[idx * 2 + 1] = emb_rel_rev[idx]
+
+    Config.embedding_dim = emb_e.shape[1]
 
     return emb_e, emb_rel_concat
 
