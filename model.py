@@ -9,13 +9,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Complex(torch.nn.Module):
-    def __init__(self, num_entities, num_relations):
+    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim):
         super(Complex, self).__init__()
         self.num_entities = num_entities
-        self.emb_e_real = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
-        self.emb_e_img = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
-        self.emb_rel_real = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
-        self.emb_rel_img = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
+        self.emb_e_real = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        self.emb_e_img = torch.nn.Embedding(num_entities, embedding_rel_dim, padding_idx=0)
+        self.emb_rel_real = torch.nn.Embedding(num_relations, embedding_e_dim, padding_idx=0)
+        self.emb_rel_img = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
@@ -49,11 +49,11 @@ class Complex(torch.nn.Module):
 
 
 class DistMult(torch.nn.Module):
-    def __init__(self, num_entities, num_relations):
+    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim):
         super(DistMult, self).__init__()
         # entities向量和rel向量
-        self.emb_e = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
-        self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
+        self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        self.emb_rel = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
@@ -83,11 +83,11 @@ class DistMult(torch.nn.Module):
 
 
 class ConvE(torch.nn.Module):
-    def __init__(self, num_entities, num_relations):
+    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim):
         super(ConvE, self).__init__()
         # entities向量和rel向量
-        self.emb_e = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
-        self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
+        self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        self.emb_rel = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.hidden_drop = torch.nn.Dropout(Config.dropout)

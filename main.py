@@ -105,11 +105,10 @@ def preprocess(dataset_name, delete_data=False):
         emb_rel_concat[idx * 2] = emb_rel[idx]
         emb_rel_concat[idx * 2 + 1] = emb_rel_rev[idx]
 
-    Config.embedding_dim = emb_e.shape[1]
-
-    emb_fist2 = np.random.normal(size=(2, emb_e.shape[1]))
-    emb_e = np.concatenate((emb_fist2, emb_e), axis=0)
-    emb_rel = np.concatenate((emb_fist2, emb_rel_concat), axis=0)
+    emb_e_fist2 = np.random.normal(size=(2, emb_e.shape[1]))
+    emb_e = np.concatenate((emb_e_fist2, emb_e), axis=0)
+    emb_rel_fist2 = np.random.normal(size=(2, emb_rel_concat.shape[1]))
+    emb_rel = np.concatenate((emb_rel_fist2, emb_rel_concat), axis=0)
 
     return emb_e, emb_rel
 
@@ -133,13 +132,13 @@ def main():
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
     if Config.model_name is None:
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])  # 实体数、关系数
     elif Config.model_name == 'ConvE':
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])
     elif Config.model_name == 'DistMult':
-        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token)
+        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])
     elif Config.model_name == 'ComplEx':
-        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token)
+        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])
     else:
         # log.info('Unknown model: {0}', Config.model_name)
         raise Exception("Unknown model!")
