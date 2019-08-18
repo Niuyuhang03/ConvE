@@ -102,7 +102,7 @@ def preprocess(dataset_name, delete_data=False):
     emb_rel = rel_feature[np.array(emb_rel_arg), :]
     emb_rel_rev = -emb_rel
     emb_rel_concat = np.zeros((emb_rel.shape[0] * 2, emb_rel.shape[1]))
-    for idx in emb_rel.shape[0]:
+    for idx in range(emb_rel.shape[0]):
         emb_rel_concat[idx * 2] = emb_rel[idx]
         emb_rel_concat[idx * 2 + 1] = emb_rel_rev[idx]
 
