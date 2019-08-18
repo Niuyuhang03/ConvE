@@ -97,7 +97,7 @@ def preprocess(dataset_name, delete_data=False):
     emb_e = entity_feature[np.array(emb_e_arg), :]
 
     rel_idx_token = p.state['vocab']['rel'].idx2token
-    rel_token = np.array([rel_idx_token[idx] for idx in range(2, (len(rel_idx_token) - 2) / 2)])
+    rel_token = np.array([rel_idx_token[idx] for idx in range(2, int((len(rel_idx_token) - 2) / 2))])
     emb_rel_arg = [np.argwhere(rel_name==rel) for rel in rel_token]
     emb_rel = rel_feature[np.array(emb_rel_arg), :]
     emb_rel_rev = -emb_rel
