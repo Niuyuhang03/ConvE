@@ -107,7 +107,11 @@ def preprocess(dataset_name, delete_data=False):
 
     Config.embedding_dim = emb_e.shape[1]
 
-    return emb_e, emb_rel_concat
+    emb_fist2 = np.random.normal(size=(2, emb_e.shape[1]))
+    emb_e = np.concatenate((emb_fist2, emb_e), axis=0)
+    emb_rel = np.concatenate((emb_fist2, emb_rel_concat), axis=0)
+
+    return emb_e, emb_rel
 
 
 def main():
