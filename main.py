@@ -167,8 +167,9 @@ def main():
     params = [value.numel() for value in model.parameters()]
     print(params)
     print(np.sum(params))
+    param1, param2 = model.parameters()
 
-    opt = torch.optim.Adam(model.parameters(), lr=Config.learning_rate, weight_decay=Config.L2)
+    opt = torch.optim.Adam(param2, lr=Config.learning_rate, weight_decay=Config.L2)
     for epoch in range(epochs):
         model.train()
         for i, str2var in enumerate(train_batcher):
