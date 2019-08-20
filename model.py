@@ -9,11 +9,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Complex(torch.nn.Module):
-    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim):
+    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim, emb_e):
         super(Complex, self).__init__()
         self.num_entities = num_entities
-        self.emb_e_real = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
-        self.emb_e_img = torch.nn.Embedding(num_entities, embedding_rel_dim, padding_idx=0)
+        # self.emb_e_real = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        self.emb_e_real = torch.from_numpy(emb_e)
+        # self.emb_e_img = torch.nn.Embedding(num_entities, embedding_rel_dim, padding_idx=0)
+        self.emb_e_img = torch.from_numpy(emb_e)
         self.emb_rel_real = torch.nn.Embedding(num_relations, embedding_e_dim, padding_idx=0)
         self.emb_rel_img = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
@@ -26,15 +28,15 @@ class Complex(torch.nn.Module):
         # xavier_normal_(self.emb_rel_real.weight.data)
         # xavier_normal_(self.emb_rel_img.weight.data)
         # 初始化为GAT的结果
-        self.emb_e_real.weight.data.copy_(torch.from_numpy(init_emb_e))
-        self.emb_e_img.weight.data.copy_(torch.from_numpy(init_emb_e))
+        # self.emb_e_real.weight.data.copy_(torch.from_numpy(init_emb_e))
+        # self.emb_e_img.weight.data.copy_(torch.from_numpy(init_emb_e))
         self.emb_rel_real.weight.data.copy_(torch.from_numpy(init_emb_rel))
         self.emb_rel_img.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel):
 
-        e1_embedded_real = self.emb_e_real(e1).squeeze()
-        rel_embedded_real = self.emb_rel_real(rel).squeeze()
+        e1_embedded_real = self.emb_e_real[e1].squeeze()
+        rel_embedded_real = self.emb_rel_real[rel].squeeze()
         e1_embedded_img = self.emb_e_img(e1).squeeze()
         rel_embedded_img = self.emb_rel_img(rel).squeeze()
 
@@ -55,10 +57,10 @@ class Complex(torch.nn.Module):
 
 
 class DistMult(torch.nn.Module):
-    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim):
+    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim, emb_e):
         super(DistMult, self).__init__()
         # entities向量和rel向量
-        self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        self.emb_e_real = torch.from_numpy(emb_e)
         self.emb_rel = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
@@ -69,12 +71,12 @@ class DistMult(torch.nn.Module):
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
-        self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
+        # self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel):
         # e1: batch_size * 1, rel: batch_size * 1
-        e1_embedded = self.emb_e(e1)  # batch_size * 1 * embedding_e_dim
+        e1_embedded = self.emb_e[e1]  # batch_size * 1 * embedding_e_dim
         rel_embedded = self.emb_rel(rel)  # batch_size * 1 * embedding_rel_dim
         e1_embedded = e1_embedded.squeeze()  # batch_size * embedding_e_dim
         rel_embedded = rel_embedded.squeeze()  # batch_size * embedding_rel_dim
@@ -89,10 +91,11 @@ class DistMult(torch.nn.Module):
 
 
 class ConvE(torch.nn.Module):
-    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim):
+    def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim, emb_e):
         super(ConvE, self).__init__()
         # entities向量和rel向量
-        self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        # self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
+        self.emb_e_real = torch.from_numpy(emb_e)
         self.emb_rel = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
@@ -106,18 +109,17 @@ class ConvE(torch.nn.Module):
         self.bn2 = torch.nn.BatchNorm1d(Config.embedding_dim)
         self.register_parameter('b', Parameter(torch.zeros(num_entities)))
         self.fc = torch.nn.Linear(10368, Config.embedding_dim)
-        print(num_entities, num_relations)
 
     def init(self, init_emb_e, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
-        self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
+        # self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel):
-        e1_embedded = self.emb_e(e1).view(-1, 1, 10, 20)
+        e1_embedded = self.emb_e[e1].view(-1, 1, 10, 20)
         rel_embedded = self.emb_rel(rel).view(-1, 1, 10, 20)
 
         stacked_inputs = torch.cat([e1_embedded, rel_embedded], 2)  # 按列拼接

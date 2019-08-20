@@ -127,13 +127,13 @@ def main():
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
     if Config.model_name is None:
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])  # 实体数、关系数
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1], emb_e)  # 实体数、关系数
     elif Config.model_name == 'ConvE':
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1], emb_e)
     elif Config.model_name == 'DistMult':
-        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])
+        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1], emb_e)
     elif Config.model_name == 'ComplEx':
-        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1])
+        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token, emb_e.shape[1], emb_rel.shape[1], emb_e)
     else:
         # log.info('Unknown model: {0}', Config.model_name)
         raise Exception("Unknown model!")
@@ -161,20 +161,14 @@ def main():
         ranking_and_hits(model, test_rank_batcher, vocab, 'test_evaluation')
         ranking_and_hits(model, dev_rank_batcher, vocab, 'dev_evaluation')
     else:
-        model.init(emb_e, emb_rel)
+        model.init(emb_rel)
 
     total_param_size = []
 
     params = {name: value.numel() for name, value in model.named_parameters()}
     print(params)
     # print(np.sum(params))
-    if Config.model_name != 'ComplEx':
-        param1, param2 = model.parameters()  # model.parameters()为generation
-        opt = torch.optim.Adam([param2], lr=Config.learning_rate, weight_decay=Config.L2)
-    else:
-        param1, param2, param3, param4 = model.parameters()  # model.parameters()为generation
-        opt = torch.optim.Adam([param3, param4], lr=Config.learning_rate, weight_decay=Config.L2)
-
+    opt = torch.optim.Adam(model.parameters(), lr=Config.learning_rate, weight_decay=Config.L2)
     for epoch in range(epochs):
         model.train()
         for i, str2var in enumerate(train_batcher):
