@@ -60,7 +60,7 @@ class DistMult(torch.nn.Module):
     def __init__(self, num_entities, num_relations, embedding_e_dim, embedding_rel_dim, emb_e):
         super(DistMult, self).__init__()
         # entities向量和rel向量
-        self.emb_e_real = torch.from_numpy(emb_e)
+        self.emb_e = torch.from_numpy(emb_e)
         self.emb_rel = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
@@ -95,7 +95,7 @@ class ConvE(torch.nn.Module):
         super(ConvE, self).__init__()
         # entities向量和rel向量
         # self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
-        self.emb_e_real = torch.from_numpy(emb_e)
+        self.emb_e = torch.from_numpy(emb_e)
         self.emb_rel = torch.nn.Embedding(num_relations, embedding_rel_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
