@@ -116,10 +116,6 @@ def preprocess(dataset_name, delete_data=False):
 def main():
     if Config.process:
         emb_e, emb_rel = preprocess(Config.dataset, delete_data=True)
-    # print("emb_rel: {}".format(emb_rel),
-    #       "emb_rel.shape: {}".format(emb_rel.shape),
-    #       "emb_e: {}".format(emb_e),
-    #       "emb_e.shape: {}".format(emb_e.shape))
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
     p = Pipeline(Config.dataset, keys=input_keys)
     p.load_vocabs()
