@@ -68,10 +68,10 @@ class DistMult(torch.nn.Module):
 
     def forward(self, e1, rel):
         # e1: batch_size * 1, rel: batch_size * 1
-        e1_embedded = self.emb_e(e1)  # batch_size * 1 * embedding_dim
-        rel_embedded = self.emb_rel(rel)  # batch_size * 1 * embedding_dim
-        e1_embedded = e1_embedded.squeeze()
-        rel_embedded = rel_embedded.squeeze()
+        e1_embedded = self.emb_e(e1)  # batch_size * 1 * embedding_e_dim
+        rel_embedded = self.emb_rel(rel)  # batch_size * 1 * embedding_rel_dim
+        e1_embedded = e1_embedded.squeeze()  # batch_size * embedding_e_dim
+        rel_embedded = rel_embedded.squeeze()  # batch_size * embedding_rel_dim
 
         e1_embedded = self.inp_drop(e1_embedded)
         rel_embedded = self.inp_drop(rel_embedded)
@@ -114,7 +114,7 @@ class ConvE(torch.nn.Module):
         e1_embedded = self.emb_e(e1).view(-1, 1, 10, 20)
         rel_embedded = self.emb_rel(rel).view(-1, 1, 10, 20)
 
-        stacked_inputs = torch.cat([e1_embedded, rel_embedded], 2)
+        stacked_inputs = torch.cat([e1_embedded, rel_embedded], 2)  # 按列拼接
 
         stacked_inputs = self.bn0(stacked_inputs)
         x = self.inp_drop(stacked_inputs)
