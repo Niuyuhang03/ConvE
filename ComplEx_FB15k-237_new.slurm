@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -o ./ComplEx_FB15k-237_new/ComplEx_FB15k-237_new_result.log         # 输出日志，可以查看ckpt文件夹
-#SBATCH -J ComFn             # 任务名称
+#SBATCH -J CmFn             # 任务名称
 #SBATCH --gres=gpu:V100:1
 #SBATCH -c 5
 source /home/LAB/anaconda3/etc/profile.d/conda.sh
