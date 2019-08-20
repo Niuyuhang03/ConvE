@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -o ComplEx_FB15k-237_result.log         # 输出日志，可以查看ckpt文件夹
+#SBATCH -o ./ComplEx_FB15k-237/ComplEx_FB15k-237_result.log         # 输出日志，可以查看ckpt文件夹
 #SBATCH -J ComF             # 任务名称
 #SBATCH --gres=gpu:V100:1
 #SBATCH -c 5
