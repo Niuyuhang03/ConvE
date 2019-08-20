@@ -20,10 +20,16 @@ class Complex(torch.nn.Module):
         self.loss = torch.nn.BCELoss()
 
     def init(self, init_emb_e, init_emb_rel):
-        xavier_normal_(self.emb_e_real.weight.data)
-        xavier_normal_(self.emb_e_img.weight.data)
-        xavier_normal_(self.emb_rel_real.weight.data)
-        xavier_normal_(self.emb_rel_img.weight.data)
+        # 初始化为正态分布结果
+        # xavier_normal_(self.emb_e_real.weight.data)
+        # xavier_normal_(self.emb_e_img.weight.data)
+        # xavier_normal_(self.emb_rel_real.weight.data)
+        # xavier_normal_(self.emb_rel_img.weight.data)
+        # 初始化为GAT的结果
+        self.emb_e_real.weight.data.copy_(torch.from_numpy(init_emb_e))
+        self.emb_e_img.weight.data.copy_(torch.from_numpy(init_emb_e))
+        self.emb_rel_real.weight.data.copy_(torch.from_numpy(init_emb_rel))
+        self.emb_rel_img.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel):
 
@@ -76,7 +82,7 @@ class DistMult(torch.nn.Module):
         e1_embedded = self.inp_drop(e1_embedded)
         rel_embedded = self.inp_drop(rel_embedded)
 
-        pred = torch.mm(e1_embedded * rel_embedded, self.emb_e.weight.transpose(1,0))
+        pred = torch.mm(e1_embedded * rel_embedded, self.emb_e.weight.transpose(1,0))  # batch_size * num_entities
         pred = F.sigmoid(pred)
 
         return pred
