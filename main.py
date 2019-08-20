@@ -164,9 +164,10 @@ def main():
         model.init(emb_e, emb_rel)
 
     total_param_size = []
-    params = [value.numel() for value in model.parameters()]
+
+    params = {name: value.numel() for name, value in model.named_parameters()}
     print(params)
-    print(np.sum(params))
+    # print(np.sum(params))
     if Config.model_name != 'ComplEx':
         param1, param2 = model.parameters()  # model.parameters()为generation
         opt = torch.optim.Adam([param2], lr=Config.learning_rate, weight_decay=Config.L2)
