@@ -52,8 +52,8 @@ def preprocess(dataset_name, delete_data=False):
     train_path = 'data/{0}/e1rel_to_e2_train.json'.format(dataset_name)
     dev_ranking_path = 'data/{0}/e1rel_to_e2_ranking_dev.json'.format(dataset_name)
     test_ranking_path = 'data/{0}/e1rel_to_e2_ranking_test.json'.format(dataset_name)
-    entity_path = 'data/{0}/GAT_{1}.content'.format(dataset_name, dataset_name)
-    rel_path = 'data/{0}/GAT_{1}.rel'.format(dataset_name, dataset_name)
+    entity_path = 'data/{0}/{1}.content'.format(dataset_name, dataset_name)
+    rel_path = 'data/{0}/{1}.rel'.format(dataset_name, dataset_name)
 
     entity_feature = np.genfromtxt(entity_path, dtype=np.dtype(str))
     entity_name = entity_feature[:, 0]
