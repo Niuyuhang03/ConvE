@@ -46,10 +46,10 @@ class Complex(torch.nn.Module):
         rel_embedded_img = self.inp_drop(rel_embedded_img)
 
         # complex space bilinear product (equivalent to HolE)
-        realrealreal = torch.mm(e1_embedded_real*rel_embedded_real, self.emb_e_real.weight.transpose(1, 0))
-        realimgimg = torch.mm(e1_embedded_real*rel_embedded_img, self.emb_e_img.weight.transpose(1,0))
-        imgrealimg = torch.mm(e1_embedded_img*rel_embedded_real, self.emb_e_img.weight.transpose(1,0))
-        imgimgreal = torch.mm(e1_embedded_img*rel_embedded_img, self.emb_e_real.weight.transpose(1,0))
+        realrealreal = torch.mm(e1_embedded_real*rel_embedded_real, self.emb_e_real.transpose(1, 0))
+        realimgimg = torch.mm(e1_embedded_real*rel_embedded_img, self.emb_e_img.transpose(1,0))
+        imgrealimg = torch.mm(e1_embedded_img*rel_embedded_real, self.emb_e_img.transpose(1,0))
+        imgimgreal = torch.mm(e1_embedded_img*rel_embedded_img, self.emb_e_real.transpose(1,0))
         pred = realrealreal + realimgimg + imgrealimg - imgimgreal
         pred = F.sigmoid(pred)
 
@@ -84,7 +84,7 @@ class DistMult(torch.nn.Module):
         e1_embedded = self.inp_drop(e1_embedded)
         rel_embedded = self.inp_drop(rel_embedded)
 
-        pred = torch.mm(e1_embedded * rel_embedded, self.emb_e.weight.transpose(1,0))  # batch_size * num_entities
+        pred = torch.mm(e1_embedded * rel_embedded, self.emb_e.transpose(1,0))  # batch_size * num_entities
         pred = F.sigmoid(pred)
 
         return pred
@@ -136,7 +136,7 @@ class ConvE(torch.nn.Module):
         x = self.hidden_drop(x)
         x = self.bn2(x)
         x = F.relu(x)
-        x = torch.mm(x, self.emb_e.weight.transpose(1,0))
+        x = torch.mm(x, self.emb_e.transpose(1,0))
         x += self.b.expand_as(x)
         pred = F.sigmoid(x)
 
