@@ -119,8 +119,8 @@ class ConvE(torch.nn.Module):
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel):
-        e1_embedded = self.emb_e[e1].view(-1, 1, 10, 20)
-        rel_embedded = self.emb_rel(rel).view(-1, 1, 10, 20)
+        e1_embedded = self.emb_e[e1].view(-1, 1, 10, 10)
+        rel_embedded = self.emb_rel(rel).view(-1, 1, 10, 10)
 
         stacked_inputs = torch.cat([e1_embedded, rel_embedded], 2)  # 按列拼接
 
