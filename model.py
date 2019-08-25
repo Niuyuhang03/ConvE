@@ -108,7 +108,7 @@ class ConvE(torch.nn.Module):
         self.bn1 = torch.nn.BatchNorm2d(32)
         self.bn2 = torch.nn.BatchNorm1d(Config.embedding_dim)
         self.register_parameter('b', Parameter(torch.zeros(num_entities)))
-        self.fc = torch.nn.Linear(10368, Config.embedding_dim)
+        self.fc = torch.nn.Linear(6400, Config.embedding_dim)
 
     def init(self, init_emb_e, init_emb_rel):
         # 初始化为正态分布结果
