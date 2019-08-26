@@ -91,25 +91,24 @@ def preprocess(dataset_name, delete_data=False):
 
     # sort entity_feature and rel_feature by p.state['vocab']['e1'].idx2token and p.state['vocab']['rel'].idx2token
 
+    emb_e = np.random.normal((p.state['vocab']['e1'].num_token, Config.embedding_dim))
     e_idx_token = p.state['vocab']['e1'].idx2token
     e_token = np.array([e_idx_token[idx] for idx in range(2, len(e_idx_token))])
-    emb_e_arg = [np.argwhere(entity_name==e)[0][0] for e in e_token]
-    emb_e = entity_feature[np.array(emb_e_arg), :]
+    idx = 2
+    for e in e_token:
+        if e in entity_name:
+            emb_e[idx] = entity_feature[entity_name==e]
+        idx += 1
 
+    emb_rel = np.random.normal((p.state['vocab']['rel'].num_token, Config.embedding_dim))
     rel_idx_token = p.state['vocab']['rel'].idx2token
     rel_token = np.array([rel_idx_token[idx] for idx in range(2, len(rel_idx_token), 2)])
-    emb_rel_arg = [np.argwhere(rel_name==rel)[0][0] for rel in rel_token]
-    emb_rel = rel_feature[np.array(emb_rel_arg), :]
-    emb_rel_rev = -emb_rel
-    emb_rel_concat = np.zeros((emb_rel.shape[0] * 2, emb_rel.shape[1]))
-    for idx in range(emb_rel.shape[0]):
-        emb_rel_concat[idx * 2] = emb_rel[idx]
-        emb_rel_concat[idx * 2 + 1] = emb_rel_rev[idx]
-
-    emb_e_fist2 = np.random.normal(size=(2, emb_e.shape[1]))
-    emb_e = np.concatenate((emb_e_fist2, emb_e), axis=0)
-    emb_rel_fist2 = np.random.normal(size=(2, emb_rel_concat.shape[1]))
-    emb_rel = np.concatenate((emb_rel_fist2, emb_rel_concat), axis=0)
+    idx = 2
+    for rel in rel_token:
+        if rel in rel_name:
+            emb_rel[idx] = rel_feature[rel_name==rel]
+            emb_rel[idx + 1] = -rel_feature[rel_name == rel]
+        idx += 2
 
     return emb_e, emb_rel
 
