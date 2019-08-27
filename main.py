@@ -91,24 +91,25 @@ def preprocess(dataset_name, delete_data=False):
 
     # sort entity_feature and rel_feature by p.state['vocab']['e1'].idx2token and p.state['vocab']['rel'].idx2token
 
-    emb_e = np.random.normal((p.state['vocab']['e1'].num_token, Config.embedding_dim))
+    emb_e = np.random.normal(size=(p.state['vocab']['e1'].num_token, Config.embedding_dim))
     e_idx_token = p.state['vocab']['e1'].idx2token
     e_token = np.array([e_idx_token[idx] for idx in range(2, len(e_idx_token))])
     idx = 2
     for e in e_token:
         if e in entity_name:
-            emb_e[idx] = entity_feature[entity_name==e]
+            emb_e[idx] = entity_feature[np.where(entity_name==e)]
         idx += 1
 
-    emb_rel = np.random.normal((p.state['vocab']['rel'].num_token, Config.embedding_dim))
+    emb_rel = np.random.normal(size=(p.state['vocab']['rel'].num_token, Config.embedding_dim))
     rel_idx_token = p.state['vocab']['rel'].idx2token
     rel_token = np.array([rel_idx_token[idx] for idx in range(2, len(rel_idx_token), 2)])
     idx = 2
     for rel in rel_token:
         if rel in rel_name:
-            emb_rel[idx] = rel_feature[rel_name==rel]
-            emb_rel[idx + 1] = -rel_feature[rel_name == rel]
+            emb_rel[idx] = rel_feature[np.where(rel_name==rel)]
+            emb_rel[idx + 1] = -rel_feature[np.where(rel_name == rel)]
         idx += 2
+    print('emb_e.shape: {}, emb_rel.shape: {}'.format(emb_e.shape, emb_rel.shape))
 
     return emb_e, emb_rel
 

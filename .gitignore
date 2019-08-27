@@ -7,3 +7,4 @@ try.slurm
 *.json
 *_try.slurm
 *_try/
+try.py
