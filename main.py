@@ -164,7 +164,7 @@ def main():
         ranking_and_hits(model, test_rank_batcher, vocab, 'test_evaluation')
         ranking_and_hits(model, dev_rank_batcher, vocab, 'dev_evaluation')
     else:
-        model.init(emb_rel)
+        model.init(emb_rel, Config.cuda)
 
     total_param_size = []
 

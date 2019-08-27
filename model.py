@@ -21,7 +21,7 @@ class Complex(torch.nn.Module):
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
-    def init(self, init_emb_rel):
+    def init(self, init_emb_rel, use_cuda):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e_real.weight.data)
         # xavier_normal_(self.emb_e_img.weight.data)
@@ -30,6 +30,9 @@ class Complex(torch.nn.Module):
         # 初始化为GAT的结果
         # self.emb_e_real.weight.data.copy_(torch.from_numpy(init_emb_e))
         # self.emb_e_img.weight.data.copy_(torch.from_numpy(init_emb_e))
+        if use_cuda:
+            self.emb_e_img = self.emb_e_img.cuda()
+            self.emb_e_real = self.emb_e_real.cuda()
         self.emb_rel_real.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
         self.emb_rel_img.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
 
@@ -66,12 +69,14 @@ class DistMult(torch.nn.Module):
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
-    def init(self, init_emb_rel):
+    def init(self, init_emb_rel, use_cuda):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
         # self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
+        if use_cuda:
+            self.emb_e = self.emb_e.cuda()
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
 
     def forward(self, e1, rel):
@@ -110,12 +115,14 @@ class ConvE(torch.nn.Module):
         self.register_parameter('b', Parameter(torch.zeros(num_entities)))
         self.fc = torch.nn.Linear(6400, Config.embedding_dim)
 
-    def init(self, init_emb_rel):
+    def init(self, init_emb_rel, use_cuda):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
         # self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
+        if use_cuda:
+            self.emb_e = self.emb_e.cuda()
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
 
     def forward(self, e1, rel):
