@@ -113,7 +113,7 @@ def preprocess(dataset_name, delete_data=False):
         idx += 2
     print('emb_e.shape: {}, emb_rel.shape: {}'.format(emb_e.shape, emb_rel.shape))
 
-    return emb_e, emb_rel
+    return emb_e.astype(np.float32), emb_rel.astype(np.float32)
 
 
 def main():
