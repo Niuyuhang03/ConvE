@@ -21,7 +21,7 @@ class Complex(torch.nn.Module):
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
-    def init(self, init_emb_e, init_emb_rel):
+    def init(self, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e_real.weight.data)
         # xavier_normal_(self.emb_e_img.weight.data)
@@ -66,7 +66,7 @@ class DistMult(torch.nn.Module):
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
-    def init(self, init_emb_e, init_emb_rel):
+    def init(self, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
@@ -110,7 +110,7 @@ class ConvE(torch.nn.Module):
         self.register_parameter('b', Parameter(torch.zeros(num_entities)))
         self.fc = torch.nn.Linear(6400, Config.embedding_dim)
 
-    def init(self, init_emb_e, init_emb_rel):
+    def init(self, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
