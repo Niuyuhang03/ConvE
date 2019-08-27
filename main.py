@@ -63,6 +63,8 @@ def preprocess(dataset_name, delete_data=False):
     rel_name = rel_feature[:, 0]
     rel_feature = np.array(rel_feature[:, 2:], dtype=np.float32)
 
+    print('entity_feature.shape: {}, rel_feature.shape: {}'.format(entity_feature.shape, rel_feature.shape))
+
     keys2keys = {'e1': 'e1', 'rel': 'rel', 'rel_eval': 'rel', 'e2': 'e1', 'e2_multi1': 'e1', 'e2_multi2': 'e1'}
     input_keys = ['e1', 'rel', 'rel_eval', 'e2', 'e2_multi1', 'e2_multi2']
     d = DatasetStreamer(input_keys)
