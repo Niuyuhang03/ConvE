@@ -9,38 +9,29 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class Complex(torch.nn.Module):
-    def __init__(self, num_entities, num_relations, emb_e):
+    def __init__(self, num_entities, num_relations):
         super(Complex, self).__init__()
         self.num_entities = num_entities
-        # self.emb_e_real = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
-        self.emb_e_real = torch.from_numpy(emb_e.copy())
-        # self.emb_e_img = torch.nn.Embedding(num_entities, embedding_rel_dim, padding_idx=0)
-        self.emb_e_img = torch.from_numpy(emb_e.copy())
         self.emb_rel_real = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
         self.emb_rel_img = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
-    def init(self, init_emb_rel, use_cuda):
+    def init(self, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e_real.weight.data)
         # xavier_normal_(self.emb_e_img.weight.data)
         # xavier_normal_(self.emb_rel_real.weight.data)
         # xavier_normal_(self.emb_rel_img.weight.data)
         # 初始化为GAT的结果
-        # self.emb_e_real.weight.data.copy_(torch.from_numpy(init_emb_e))
-        # self.emb_e_img.weight.data.copy_(torch.from_numpy(init_emb_e))
-        if use_cuda:
-            self.emb_e_img = self.emb_e_img.cuda()
-            self.emb_e_real = self.emb_e_real.cuda()
         self.emb_rel_real.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
         self.emb_rel_img.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
 
-    def forward(self, e1, rel):
+    def forward(self, e1, rel, emb_e_img, emb_e_real):
 
-        e1_embedded_real = self.emb_e_real[e1].squeeze()
+        e1_embedded_real = emb_e_real[e1].squeeze()
         rel_embedded_real = self.emb_rel_real(rel).squeeze()
-        e1_embedded_img = self.emb_e_img[e1].squeeze()
+        e1_embedded_img = emb_e_img[e1].squeeze()
         rel_embedded_img = self.emb_rel_img(rel).squeeze()
 
         e1_embedded_real = self.inp_drop(e1_embedded_real)
@@ -49,10 +40,10 @@ class Complex(torch.nn.Module):
         rel_embedded_img = self.inp_drop(rel_embedded_img)
 
         # complex space bilinear product (equivalent to HolE)
-        realrealreal = torch.mm(e1_embedded_real*rel_embedded_real, self.emb_e_real.transpose(1, 0))
-        realimgimg = torch.mm(e1_embedded_real*rel_embedded_img, self.emb_e_img.transpose(1,0))
-        imgrealimg = torch.mm(e1_embedded_img*rel_embedded_real, self.emb_e_img.transpose(1,0))
-        imgimgreal = torch.mm(e1_embedded_img*rel_embedded_img, self.emb_e_real.transpose(1,0))
+        realrealreal = torch.mm(e1_embedded_real*rel_embedded_real, emb_e_real.transpose(1, 0))
+        realimgimg = torch.mm(e1_embedded_real*rel_embedded_img, emb_e_img.transpose(1,0))
+        imgrealimg = torch.mm(e1_embedded_img*rel_embedded_real, emb_e_img.transpose(1,0))
+        imgimgreal = torch.mm(e1_embedded_img*rel_embedded_img, emb_e_real.transpose(1,0))
         pred = realrealreal + realimgimg + imgrealimg - imgimgreal
         pred = F.sigmoid(pred)
 
@@ -60,28 +51,23 @@ class Complex(torch.nn.Module):
 
 
 class DistMult(torch.nn.Module):
-    def __init__(self, num_entities, num_relations, emb_e):
+    def __init__(self, num_entities, num_relations):
         super(DistMult, self).__init__()
-        # entities向量和rel向量
-        self.emb_e = torch.from_numpy(emb_e.copy())
         self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
         self.loss = torch.nn.BCELoss()
 
-    def init(self, init_emb_rel, use_cuda):
+    def init(self, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
-        # self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
-        if use_cuda:
-            self.emb_e = self.emb_e.cuda()
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
 
-    def forward(self, e1, rel):
+    def forward(self, e1, rel, emb_e):
         # e1: batch_size * 1, rel: batch_size * 1
-        e1_embedded = self.emb_e[e1]  # batch_size * 1 * embedding_e_dim
+        e1_embedded = emb_e[e1]  # batch_size * 1 * embedding_e_dim
         rel_embedded = self.emb_rel(rel)  # batch_size * 1 * embedding_rel_dim
         e1_embedded = e1_embedded.squeeze()  # batch_size * embedding_e_dim
         rel_embedded = rel_embedded.squeeze()  # batch_size * embedding_rel_dim
@@ -89,18 +75,15 @@ class DistMult(torch.nn.Module):
         e1_embedded = self.inp_drop(e1_embedded)
         rel_embedded = self.inp_drop(rel_embedded)
 
-        pred = torch.mm(e1_embedded * rel_embedded, self.emb_e.transpose(1,0))  # batch_size * num_entities
+        pred = torch.mm(e1_embedded * rel_embedded, emb_e.transpose(1,0))  # batch_size * num_entities
         pred = F.sigmoid(pred)
 
         return pred
 
 
 class ConvE(torch.nn.Module):
-    def __init__(self, num_entities, num_relations, emb_e):
+    def __init__(self, num_entities, num_relations):
         super(ConvE, self).__init__()
-        # entities向量和rel向量
-        # self.emb_e = torch.nn.Embedding(num_entities, embedding_e_dim, padding_idx=0)
-        self.emb_e = torch.from_numpy(emb_e.copy())
         self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
 
         self.inp_drop = torch.nn.Dropout(Config.input_dropout)
@@ -115,18 +98,15 @@ class ConvE(torch.nn.Module):
         self.register_parameter('b', Parameter(torch.zeros(num_entities)))
         self.fc = torch.nn.Linear(4608, Config.embedding_dim)
 
-    def init(self, init_emb_rel, use_cuda):
+    def init(self, init_emb_rel):
         # 初始化为正态分布结果
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
-        # self.emb_e.weight.data.copy_(torch.from_numpy(init_emb_e))
-        if use_cuda:
-            self.emb_e = self.emb_e.cuda()
         self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
 
-    def forward(self, e1, rel):
-        e1_embedded = self.emb_e[e1].view(-1, 1, 10, 10)
+    def forward(self, e1, rel, emb_e):
+        e1_embedded = emb_e[e1].view(-1, 1, 10, 10)
         rel_embedded = self.emb_rel(rel).view(-1, 1, 10, 10)
 
         stacked_inputs = torch.cat([e1_embedded, rel_embedded], 2)  # 按列拼接
@@ -143,37 +123,8 @@ class ConvE(torch.nn.Module):
         x = self.hidden_drop(x)
         x = self.bn2(x)
         x = F.relu(x)
-        x = torch.mm(x, self.emb_e.transpose(1,0))
+        x = torch.mm(x, emb_e.transpose(1,0))
         x += self.b.expand_as(x)
         pred = F.sigmoid(x)
 
         return pred
-
-
-# Add your own model here
-
-class MyModel(torch.nn.Module):
-    def __init__(self, num_entities, num_relations):
-        super(DistMult, self).__init__()
-        self.emb_e = torch.nn.Embedding(num_entities, Config.embedding_dim, padding_idx=0)
-        self.emb_rel = torch.nn.Embedding(num_relations, Config.embedding_dim, padding_idx=0)
-        self.inp_drop = torch.nn.Dropout(Config.input_dropout)
-        self.loss = torch.nn.BCELoss()
-
-    def init(self):
-        xavier_normal_(self.emb_e.weight.data)
-        xavier_normal_(self.emb_rel.weight.data)
-
-    # def forward(self, e1, rel):
-        # e1_embedded = self.emb_e(e1)
-        # rel_embedded = self.emb_rel(rel)
-
-        # Add your model function here
-        # The model function should operate on the embeddings e1 and rel
-        # and output scores for all entities (you will need a projection layer
-        # with output size num_relations (from constructor above)
-
-        # generate output scores here
-        # prediction = F.sigmoid(output)
-
-        # return prediction
