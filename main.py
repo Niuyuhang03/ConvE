@@ -58,9 +58,11 @@ def preprocess(dataset_name, delete_data=False):
 
     entity_feature = np.genfromtxt(entity_path, dtype=np.dtype(str))
     entity_name = entity_feature[:, 0]
+    entity_name_set = set(entity_name)
     entity_feature = np.array(entity_feature[:, 1:], dtype=np.float32)
     rel_feature = np.genfromtxt(rel_path, dtype=np.dtype(str))
     rel_name = rel_feature[:, 0]
+    rel_name_set = set(rel_name)
     rel_feature = np.array(rel_feature[:, 2:], dtype=np.float32)
 
     print('entity_feature.shape: {}, rel_feature.shape: {}'.format(entity_feature.shape, rel_feature.shape))
@@ -93,26 +95,34 @@ def preprocess(dataset_name, delete_data=False):
 
     # sort entity_feature and rel_feature by p.state['vocab']['e1'].idx2token and p.state['vocab']['rel'].idx2token
 
-    emb_e = np.random.normal(size=(p.state['vocab']['e1'].num_token, Config.embedding_dim))
     e_idx_token = p.state['vocab']['e1'].idx2token
     e_token = np.array([e_idx_token[idx] for idx in range(2, len(e_idx_token))])
-    idx = 2
-    for e in e_token:
-        if e in entity_name:
-            emb_e[idx] = entity_feature[np.where(entity_name==e)]
-        idx += 1
+    e_token_set = set(e_token)
+    if e_token_set - entity_name_set:
+        print("entity {} is in train, valid or test but not in .content.".format(e_token_set - entity_name_set))
+        sys.exit(0)
+    emb_e_arg = [np.argwhere(entity_name == e)[0][0] for e in e_token]
+    emb_e = entity_feature[np.array(emb_e_arg), :]
+    emb_e_fist2 = np.random.normal(size=(2, emb_e.shape[1]))
+    emb_e = np.concatenate((emb_e_fist2, emb_e), axis=0)
 
-    emb_rel = np.random.normal(size=(p.state['vocab']['rel'].num_token, Config.embedding_dim))
     rel_idx_token = p.state['vocab']['rel'].idx2token
     rel_token = np.array([rel_idx_token[idx] for idx in range(2, len(rel_idx_token), 2)])
-    idx = 2
-    for rel in rel_token:
-        if rel in rel_name:
-            emb_rel[idx] = rel_feature[np.where(rel_name==rel)]
-            emb_rel[idx + 1] = -rel_feature[np.where(rel_name == rel)]
-        idx += 2
-    print('emb_e.shape: {}, emb_rel.shape: {}'.format(emb_e.shape, emb_rel.shape))
+    rel_token_set = set(rel_token)
+    if rel_token_set - rel_name_set:
+        print("relation {} is in train, valid or test but not in .rel.".format(rel_token_set - rel_name_set))
+        sys.exit(0)
+    emb_rel_arg = [np.argwhere(rel_name == rel)[0][0] for rel in rel_token]
+    emb_rel = rel_feature[np.array(emb_rel_arg), :]
+    emb_rel_rev = -emb_rel
+    emb_rel_concat = np.zeros((emb_rel.shape[0] * 2, emb_rel.shape[1]))
+    for idx in range(emb_rel.shape[0]):
+        emb_rel_concat[idx * 2] = emb_rel[idx]
+        emb_rel_concat[idx * 2 + 1] = emb_rel_rev[idx]
+    emb_rel_fist2 = np.random.normal(size=(2, emb_rel_concat.shape[1]))
+    emb_rel = np.concatenate((emb_rel_fist2, emb_rel_concat), axis=0)
 
+    print('emb_e.shape: {}, emb_rel.shape: {}'.format(emb_e.shape, emb_rel.shape))
     return emb_e.astype(np.float32), emb_rel.astype(np.float32)
 
 
@@ -122,34 +132,43 @@ def main():
     p = Pipeline(Config.dataset, keys=input_keys)
     p.load_vocabs()
     vocab = p.state['vocab']
-
     num_entities = vocab['e1'].num_token
 
     train_batcher = StreamBatcher(Config.dataset, 'train', Config.batch_size, randomize=True, keys=input_keys)
-    dev_rank_batcher = StreamBatcher(Config.dataset, 'dev_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
-    test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
-
-    if Config.model_name is None:
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)  # 实体数、关系数
-    elif Config.model_name == 'ConvE':
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)
-    elif Config.model_name == 'DistMult':
-        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)
-    elif Config.model_name == 'ComplEx':
-        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)
-    else:
-        # log.info('Unknown model: {0}', Config.model_name)
-        raise Exception("Unknown model!")
-
     train_batcher.at_batch_prepared_observers.insert(1, TargetIdx2MultiTarget(num_entities, 'e2_multi1', 'e2_multi1_binary'))
-
     eta = ETAHook('train', print_every_x_batches=100)
     train_batcher.subscribe_to_events(eta)
     train_batcher.subscribe_to_start_of_epoch_event(eta)
     train_batcher.subscribe_to_events(LossHook('train', print_every_x_batches=100))
 
+    dev_rank_batcher = StreamBatcher(Config.dataset, 'dev_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
+    test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
+
+    if Config.model_name is None:
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
+        emb_e = torch.from_numpy(emb_e.copy())
+    elif Config.model_name == 'ConvE':
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)
+        emb_e = torch.from_numpy(emb_e.copy())
+    elif Config.model_name == 'DistMult':
+        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token)
+        emb_e = torch.from_numpy(emb_e.copy())
+    elif Config.model_name == 'ComplEx':
+        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token)
+        emb_e_real = torch.from_numpy(emb_e.copy())
+        emb_e_img = torch.from_numpy(emb_e.copy())
+    else:
+        # log.info('Unknown model: {0}', Config.model_name)
+        raise Exception("Unknown model!")
+
     if Config.cuda:
         model.cuda()
+        if Config.model_name == 'ComplEx':
+            emb_e_img = emb_e_img.cuda()
+            emb_e_real = emb_e_real.cuda()
+        else:
+            emb_e = emb_e.cuda()
+
     if load:
         model_params = torch.load(model_path)
         print(model)
@@ -164,14 +183,12 @@ def main():
         ranking_and_hits(model, test_rank_batcher, vocab, 'test_evaluation')
         ranking_and_hits(model, dev_rank_batcher, vocab, 'dev_evaluation')
     else:
-        model.init(emb_rel, Config.cuda)
-
-    total_param_size = []
+        model.init(emb_rel)
 
     params = {name: value.numel() for name, value in model.named_parameters()}
     print(params)
-    # print(np.sum(params))
     opt = torch.optim.Adam(model.parameters(), lr=Config.learning_rate, weight_decay=Config.L2)
+
     for epoch in range(epochs):
         model.train()
         for i, str2var in enumerate(train_batcher):
@@ -182,7 +199,10 @@ def main():
             # label smoothing
             e2_multi = ((1.0-Config.label_smoothing_epsilon)*e2_multi) + (1.0/e2_multi.size(1))
 
-            pred = model.forward(e1, rel)
+            if Config.model_name == 'ComplEx':
+                pred = model.forward(e1, rel, emb_e_img, emb_e_real)
+            else:
+                pred = model.forward(e1, rel, emb_e)
             loss = model.loss(pred, e2_multi)
             loss.backward()
             opt.step()
