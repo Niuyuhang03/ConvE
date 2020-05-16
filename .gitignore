@@ -7,3 +7,4 @@ try.slurm
 *_try.slurm
 *_try/
 try.py
+src/*

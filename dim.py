@@ -1,31 +1,31 @@
-with open('data/FB15k-237/train.txt') as f:
-    print("FB15k-237/train.txt:")
+with open('data/FB15K237/train.txt') as f:
+    print("FB15K237/train.txt:")
     lines = f.readlines()
     print(len(lines))
 
-with open('data/FB15k-237/valid.txt') as f:
-    print("FB15k-237/valid.txt:")
+with open('data/FB15K237/valid.txt') as f:
+    print("FB15K237/valid.txt:")
     lines = f.readlines()
     print(len(lines))
 
-with open('data/FB15k-237/test.txt') as f:
-    print("FB15k-237/test.txt:")
+with open('data/FB15K237/test.txt') as f:
+    print("FB15K237/test.txt:")
     lines = f.readlines()
     print(len(lines))
 print('\n')
 
-with open('data/FB15k-237/train.txt') as f:
-    print("FB15k-237/train.txt:")
+with open('data/FB15K237/train.txt') as f:
+    print("FB15K237/train.txt:")
     lines = f.readlines()
     print(len(lines))
 
-with open('data/FB15k-237/valid.txt') as f:
-    print("FB15k-237/valid.txt:")
+with open('data/FB15K237/valid.txt') as f:
+    print("FB15K237/valid.txt:")
     lines = f.readlines()
     print(len(lines))
 
-with open('data/FB15k-237/test.txt') as f:
-    print("FB15k-237/test.txt:")
+with open('data/FB15K237/test.txt') as f:
+    print("FB15K237/test.txt:")
     lines = f.readlines()
     print(len(lines))
 print('\n')

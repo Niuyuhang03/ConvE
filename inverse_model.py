@@ -15,7 +15,7 @@ if len(sys.argv) > 1:
     dataset_name = sys.argv[1]
     threshold = float(sys.argv[2])
 else:
-    #dataset_name = 'FB15k-237'
+    #dataset_name = 'FB15K237'
     #dataset_name = 'YAGO3-10'
     #dataset_name = 'WN18'
     #dataset_name = 'FB15k'

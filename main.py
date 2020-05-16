@@ -43,7 +43,7 @@ model_name = '{2}_{0}_{1}'.format(Config.input_dropout, Config.dropout, Config.m
 epochs = 1000
 load = False
 if Config.dataset is None:
-    Config.dataset = 'FB15k-237'
+    Config.dataset = 'FB15K237_4000'
 model_path = 'saved_models/{0}_{1}.model'.format(Config.dataset, model_name)
 
 
@@ -59,7 +59,7 @@ def preprocess(dataset_name, delete_data=False):
     entity_feature = np.genfromtxt(entity_path, dtype=np.dtype(str))
     entity_name = entity_feature[:, 0]
     entity_name_set = set(entity_name)
-    entity_feature = np.array(entity_feature[:, 1:], dtype=np.float32)
+    entity_feature = np.array(entity_feature[:, 2:], dtype=np.float32)
     rel_feature = np.genfromtxt(rel_path, dtype=np.dtype(str))
     rel_name = rel_feature[:, 0]
     rel_name_set = set(rel_name)
