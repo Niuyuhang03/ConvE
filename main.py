@@ -45,6 +45,16 @@ load = False
 if Config.dataset is None:
     Config.dataset = 'FB15K237_4000'
 model_path = 'saved_models/{0}_{1}.model'.format(Config.dataset, model_name)
+print("dropout: {}, batch_size: {}, learning_rate: {}, backend: {}, L2: {}, cuda: {}, embedding_dim: {}, \
+      hidden_size: {}, input_dropout: {}, feature_map_dropout: {}, use_conv_transpose: {}, use_bias: {}, \
+      optimizer: {}, learning_rate_decay: {}, label_smoothing_epsilon: {}, epochs: {}, dataset: {}, \
+      process: {}, model_name: {}".format(Config.dropout, Config.batch_size, Config.learning_rate, \
+                                          Config.backend, Config.L2, Config.cuda, Config.embedding_dim, \
+                                          Config.hidden_size, Config.input_dropout, \
+                                          Config.feature_map_dropout, Config.use_conv_transpose, \
+                                          Config.use_bias, Config.optimizer, Config.learning_rate_decay, \
+                                          Config.label_smoothing_epsilon, Config.epochs, Config.dataset, \
+                                          Config.process, Config.model_name))
 
 
 # Preprocess knowledge graph using spodernet.
@@ -59,7 +69,7 @@ def preprocess(dataset_name, delete_data=False):
     entity_feature = np.genfromtxt(entity_path, dtype=np.dtype(str))
     entity_name = entity_feature[:, 0]
     entity_name_set = set(entity_name)
-    entity_feature = np.array(entity_feature[:, 2:], dtype=np.float32)
+    entity_feature = np.array(entity_feature[:, 1:], dtype=np.float32)  # GAT结果没有idx
     rel_feature = np.genfromtxt(rel_path, dtype=np.dtype(str))
     rel_name = rel_feature[:, 0]
     rel_name_set = set(rel_name)
@@ -99,7 +109,7 @@ def preprocess(dataset_name, delete_data=False):
     e_token = np.array([e_idx_token[idx] for idx in range(2, len(e_idx_token))])
     e_token_set = set(e_token)
     if e_token_set - entity_name_set:
-        print("entity {} is in train, valid or test but not in .content.".format(e_token_set - entity_name_set))
+        print("Error! Entity {} is in train, valid or test but not in .content.".format(e_token_set - entity_name_set))
         sys.exit(0)
     emb_e_arg = [np.argwhere(entity_name == e)[0][0] for e in e_token]
     emb_e = entity_feature[np.array(emb_e_arg), :]
@@ -107,20 +117,14 @@ def preprocess(dataset_name, delete_data=False):
     emb_e = np.concatenate((emb_e_fist2, emb_e), axis=0)
 
     rel_idx_token = p.state['vocab']['rel'].idx2token
-    rel_token = np.array([rel_idx_token[idx] for idx in range(2, len(rel_idx_token), 2)])
-    rel_token_set = set(rel_token)
+    rel_token = np.array([rel_idx_token[idx] for idx in range(2, len(rel_idx_token))])
+    rel_token_set = set([temp for temp in rel_token if "_reverse" not in temp])
     if rel_token_set - rel_name_set:
-        print("relation {} is in train, valid or test but not in .rel.".format(rel_token_set - rel_name_set))
+        print("Error! Relation {} is in train, valid or test but not in .rel.".format(rel_token_set - rel_name_set))
         sys.exit(0)
-    emb_rel_arg = [np.argwhere(rel_name == rel)[0][0] for rel in rel_token]
-    emb_rel = rel_feature[np.array(emb_rel_arg), :]
-    emb_rel_rev = -emb_rel
-    emb_rel_concat = np.zeros((emb_rel.shape[0] * 2, emb_rel.shape[1]))
-    for idx in range(emb_rel.shape[0]):
-        emb_rel_concat[idx * 2] = emb_rel[idx]
-        emb_rel_concat[idx * 2 + 1] = emb_rel_rev[idx]
-    emb_rel_fist2 = np.random.normal(size=(2, emb_rel_concat.shape[1]))
-    emb_rel = np.concatenate((emb_rel_fist2, emb_rel_concat), axis=0)
+    emb_rel = np.array([rel_feature[np.argwhere(rel_name == rel)[0][0]] if rel in rel_name else -rel_feature[np.argwhere(rel_name == rel[:-8])[0][0]] for rel in rel_token])
+    emb_rel_fist2 = np.random.normal(size=(2, emb_rel.shape[1]))
+    emb_rel = np.concatenate((emb_rel_fist2, emb_rel), axis=0)
 
     print('emb_e.shape: {}, emb_rel.shape: {}'.format(emb_e.shape, emb_rel.shape))
     return emb_e.astype(np.float32), emb_rel.astype(np.float32)
@@ -186,7 +190,7 @@ def main():
         model.init(emb_rel)
 
     params = {name: value.numel() for name, value in model.named_parameters()}
-    print(params)
+    print("params: {}".format(params))
     opt = torch.optim.Adam(model.parameters(), lr=Config.learning_rate, weight_decay=Config.L2)
 
     for epoch in range(epochs):

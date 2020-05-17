@@ -8,3 +8,4 @@ try.slurm
 *_try/
 try.py
 src/*
+.DS_Store
