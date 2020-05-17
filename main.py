@@ -150,10 +150,10 @@ def main():
 
     if Config.model_name == 'ConvE':
         model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
-        emb_e = torch.from_numpy(emb_e.copy())
+        emb_e = torch.from_numpy(emb_e)
     elif Config.model_name == 'DistMult':
         model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token)
-        emb_e = torch.from_numpy(emb_e.copy())
+        emb_e = torch.from_numpy(emb_e)
     elif Config.model_name == 'ComplEx':
         model = Complex(vocab['e1'].num_token, vocab['rel'].num_token)
         emb_e_real = torch.from_numpy(emb_e.copy())
@@ -169,6 +169,7 @@ def main():
             emb_e_real = emb_e_real.cuda()
         else:
             emb_e = emb_e.cuda()
+        emb_rel = emb_rel.cuda()
 
     if load:
         model_params = torch.load(model_path)
@@ -194,11 +195,13 @@ def main():
         model.train()
         for i, str2var in enumerate(train_batcher):
             opt.zero_grad()
+            if Config.cuda:
+                str2var = str2var.cuda()
             e1 = str2var['e1']  # batch_size * 1
             rel = str2var['rel']  # batch_size * 1
             e2_multi = str2var['e2_multi1_binary'].float()  # batch_size * num_entities
             # label smoothing
-            e2_multi = ((1.0-Config.label_smoothing_epsilon)*e2_multi) + (1.0/e2_multi.size(1))
+            e2_multi = ((1.0 - Config.label_smoothing_epsilon) * e2_multi) + (1.0 / e2_multi.size(1))
 
             if Config.model_name == 'ComplEx':
                 pred = model.forward(e1, rel, emb_e_img, emb_e_real)
@@ -216,9 +219,8 @@ def main():
         model.eval()
         with torch.no_grad():
             ranking_and_hits(model, dev_rank_batcher, vocab, 'dev_evaluation')
-            if epoch % 3 == 0:
-                if epoch > 0:
-                    ranking_and_hits(model, test_rank_batcher, vocab, 'test_evaluation')
+            if epoch % 3 == 0 and epoch > 0:
+                ranking_and_hits(model, test_rank_batcher, vocab, 'test_evaluation')
 
 
 if __name__ == '__main__':

@@ -24,8 +24,8 @@ class Complex(torch.nn.Module):
         # xavier_normal_(self.emb_rel_real.weight.data)
         # xavier_normal_(self.emb_rel_img.weight.data)
         # 初始化为GAT的结果
-        self.emb_rel_real.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
-        self.emb_rel_img.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
+        self.emb_rel_real.weight.data.copy_(torch.from_numpy(init_emb_rel))
+        self.emb_rel_img.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel, emb_e_img, emb_e_real):
 
@@ -63,7 +63,7 @@ class DistMult(torch.nn.Module):
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
-        self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
+        self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel, emb_e):
         # e1: batch_size * 1, rel: batch_size * 1
@@ -103,7 +103,7 @@ class ConvE(torch.nn.Module):
         # xavier_normal_(self.emb_e.weight.data)
         # xavier_normal_(self.emb_rel.weight.data)
         # 初始化为GAT的结果
-        self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel.copy()))
+        self.emb_rel.weight.data.copy_(torch.from_numpy(init_emb_rel))
 
     def forward(self, e1, rel, emb_e):
         e1_embedded = emb_e[e1].view(-1, 1, 10, 10)
