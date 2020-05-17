@@ -122,11 +122,11 @@ def preprocess(dataset_name, delete_data=False):
     if rel_token_set - rel_name_set:
         print("Error! Relation {} is in train, valid or test but not in .rel.".format(rel_token_set - rel_name_set))
         sys.exit(0)
-    emb_rel = np.array([rel_feature[np.argwhere(rel_name == rel)[0][0]] if rel in rel_name else -rel_feature[np.argwhere(rel_name == rel[:-8])[0][0]] for rel in rel_token])
+    emb_rel = np.array([rel_feature[np.argwhere(rel_name == rel)[0][0]] if rel in rel_name else -rel_feature[np.argwhere(rel_name == rel[:-8])[0][0]] for rel in rel_token])  # -8即'_reverse'长度
     emb_rel_fist2 = np.random.normal(size=(2, emb_rel.shape[1]))
     emb_rel = np.concatenate((emb_rel_fist2, emb_rel), axis=0)
 
-    print('emb_e.shape: {}, emb_rel.shape: {}'.format(emb_e.shape, emb_rel.shape))
+    print('emb_e.shape: {}, emb_e.type: {}, emb_rel.shape: {}, emb_rel.type: {}'.format(emb_e.shape, type(emb_e), emb_rel.shape, type(emb_rel)))
     return emb_e.astype(np.float32), emb_rel.astype(np.float32)
 
 
@@ -148,11 +148,8 @@ def main():
     dev_rank_batcher = StreamBatcher(Config.dataset, 'dev_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
-    if Config.model_name is None:
+    if Config.model_name == 'ConvE':
         model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
-        emb_e = torch.from_numpy(emb_e.copy())
-    elif Config.model_name == 'ConvE':
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)
         emb_e = torch.from_numpy(emb_e.copy())
     elif Config.model_name == 'DistMult':
         model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token)
