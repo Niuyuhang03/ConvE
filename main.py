@@ -148,6 +148,7 @@ def main():
     dev_rank_batcher = StreamBatcher(Config.dataset, 'dev_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
+    emb_rel = torch.from_numpy(emb_rel)
     if Config.model_name == 'ConvE':
         model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
         emb_e = torch.from_numpy(emb_e)
@@ -169,7 +170,6 @@ def main():
             emb_e_real = emb_e_real.cuda()
         else:
             emb_e = emb_e.cuda()
-        emb_rel = emb_rel.cuda()
 
     if load:
         model_params = torch.load(model_path)
