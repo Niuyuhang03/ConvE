@@ -44,6 +44,12 @@ epochs = 1000
 load = False
 if Config.dataset is None:
     Config.dataset = 'FB15K237_4000'
+
+use_cuda = Config.cuda and torch.cuda.is_available()
+print("use cuda: {}".format(use_cuda))
+if not use_cuda:
+    exit()
+
 model_path = 'saved_models/{0}_{1}.model'.format(Config.dataset, model_name)
 print("dropout: {}, batch_size: {}, learning_rate: {}, backend: {}, L2: {}, cuda: {}, embedding_dim: {}, \
       hidden_size: {}, input_dropout: {}, feature_map_dropout: {}, use_conv_transpose: {}, use_bias: {}, \
@@ -149,26 +155,23 @@ def main():
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
     if Config.model_name == 'ConvE':
-        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token)  # 实体数、关系数
         emb_e = torch.from_numpy(emb_e)
+        model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)  # 实体数、关系数
     elif Config.model_name == 'DistMult':
-        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token)
         emb_e = torch.from_numpy(emb_e)
+        model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)
     elif Config.model_name == 'ComplEx':
-        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token)
         emb_e_real = torch.from_numpy(emb_e.copy())
         emb_e_img = torch.from_numpy(emb_e.copy())
+        model = Complex(vocab['e1'].num_token, vocab['rel'].num_token, emb_e_real, emb_e_img)
     else:
         # log.info('Unknown model: {0}', Config.model_name)
         raise Exception("Unknown model!")
 
-    if Config.cuda:
+    if use_cuda:
         model.cuda()
-        if Config.model_name == 'ComplEx':
-            emb_e_img = emb_e_img.cuda()
-            emb_e_real = emb_e_real.cuda()
-        else:
-            emb_e = emb_e.cuda()
+        emb_e = emb_e.cuda()
+        emb_rel = emb_rel.cuda()
 
     if load:
         model_params = torch.load(model_path)
@@ -202,10 +205,7 @@ def main():
             # label smoothing
             e2_multi = ((1.0 - Config.label_smoothing_epsilon) * e2_multi) + (1.0 / e2_multi.size(1))
 
-            if Config.model_name == 'ComplEx':
-                pred = model.forward(e1, rel, emb_e_img, emb_e_real)
-            else:
-                pred = model.forward(e1, rel, emb_e)
+            pred = model.forward(e1, rel)
             loss = model.loss(pred, e2_multi)
             loss.backward()
             opt.step()
