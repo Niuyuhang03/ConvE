@@ -40,7 +40,7 @@ Config.embedding_dim = 100
 
 # model_name = 'DistMult_{0}_{1}'.format(Config.input_dropout, Config.dropout)
 model_name = '{2}_{0}_{1}'.format(Config.input_dropout, Config.dropout, Config.model_name)
-epochs = 1
+epochs = 100
 load = False
 if Config.dataset is None:
     Config.dataset = 'FB15K237_4000'
