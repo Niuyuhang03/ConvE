@@ -165,15 +165,10 @@ def main():
         emb_e_img = torch.from_numpy(emb_e.copy())
         model = Complex(vocab['e1'].num_token, vocab['rel'].num_token, emb_e_real, emb_e_img)
     else:
-        # log.info('Unknown model: {0}', Config.model_name)
         raise Exception("Unknown model!")
 
-    emb_e = torch.from_numpy(emb_e.copy())
-    emb_rel = torch.from_numpy(emb_rel.copy())
     if use_cuda:
         model.cuda()
-        emb_e = emb_e.cuda()
-        emb_rel = emb_rel.cuda()
 
     if load:
         model_params = torch.load(model_path)
@@ -199,11 +194,9 @@ def main():
         model.train()
         for i, str2var in enumerate(train_batcher):
             opt.zero_grad()
-            if Config.cuda:
-                str2var = str2var.cuda()
-            e1 = str2var['e1']  # batch_size * 1
-            rel = str2var['rel']  # batch_size * 1
-            e2_multi = str2var['e2_multi1_binary'].float()  # batch_size * num_entities
+            e1 = str2var['e1'].cuda()  # batch_size * 1
+            rel = str2var['rel'].cuda()  # batch_size * 1
+            e2_multi = str2var['e2_multi1_binary'].float().cuda()  # batch_size * num_entities
             # label smoothing
             e2_multi = ((1.0 - Config.label_smoothing_epsilon) * e2_multi) + (1.0 / e2_multi.size(1))
 
