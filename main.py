@@ -155,10 +155,10 @@ def main():
     test_rank_batcher = StreamBatcher(Config.dataset, 'test_ranking', Config.batch_size, randomize=False, loader_threads=4, keys=input_keys)
 
     if Config.model_name == 'ConvE':
-        emb_e = torch.from_numpy(emb_e)
+        emb_e = torch.from_numpy(emb_e.copy())
         model = ConvE(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)  # 实体数、关系数
     elif Config.model_name == 'DistMult':
-        emb_e = torch.from_numpy(emb_e)
+        emb_e = torch.from_numpy(emb_e.copy())
         model = DistMult(vocab['e1'].num_token, vocab['rel'].num_token, emb_e)
     elif Config.model_name == 'ComplEx':
         emb_e_real = torch.from_numpy(emb_e.copy())
@@ -168,6 +168,8 @@ def main():
         # log.info('Unknown model: {0}', Config.model_name)
         raise Exception("Unknown model!")
 
+    emb_e = torch.from_numpy(emb_e.copy())
+    emb_rel = torch.from_numpy(emb_rel.copy())
     if use_cuda:
         model.cuda()
         emb_e = emb_e.cuda()
