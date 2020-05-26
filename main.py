@@ -40,7 +40,7 @@ Config.embedding_dim = 100
 
 # model_name = 'DistMult_{0}_{1}'.format(Config.input_dropout, Config.dropout)
 model_name = '{2}_{0}_{1}'.format(Config.input_dropout, Config.dropout, Config.model_name)
-epochs = 1000
+epochs = 1
 load = False
 if Config.dataset is None:
     Config.dataset = 'FB15K237_4000'
@@ -53,13 +53,13 @@ if not use_cuda:
 model_path = 'saved_models/{0}_{1}.model'.format(Config.dataset, model_name)
 print("dropout: {}, batch_size: {}, learning_rate: {}, backend: {}, L2: {}, cuda: {}, embedding_dim: {}, \
       hidden_size: {}, input_dropout: {}, feature_map_dropout: {}, use_conv_transpose: {}, use_bias: {}, \
-      optimizer: {}, learning_rate_decay: {}, label_smoothing_epsilon: {}, epochs: {}, dataset: {}, \
+      optimizer: {}, learning_rate_decay: {}, label_smoothing_epsilon: {}, dataset: {}, \
       process: {}, model_name: {}".format(Config.dropout, Config.batch_size, Config.learning_rate, \
                                           Config.backend, Config.L2, Config.cuda, Config.embedding_dim, \
                                           Config.hidden_size, Config.input_dropout, \
                                           Config.feature_map_dropout, Config.use_conv_transpose, \
                                           Config.use_bias, Config.optimizer, Config.learning_rate_decay, \
-                                          Config.label_smoothing_epsilon, Config.epochs, Config.dataset, \
+                                          Config.label_smoothing_epsilon, Config.dataset, \
                                           Config.process, Config.model_name))
 
 

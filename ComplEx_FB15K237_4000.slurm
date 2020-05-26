@@ -3,6 +3,8 @@
 #SBATCH -J CmF4             # 任务名称
 #SBATCH --gres=gpu:V100:1
 #SBATCH -c 5
+#SBATCH -p sugon
+#SBATCH -x sugon-gpu-5,sugon-gpu-6
 time=`date +%Y%m%d-%H%M%S`
 mkdir ./ComplEx_FB15K237_4000/${time}
 source /home/LAB/anaconda3/etc/profile.d/conda.sh
