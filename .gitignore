@@ -2,7 +2,6 @@
 .idea
 *.log
 __pycache__/
-saved_models/*
 try.slurm
 *_try.slurm
 *_try/
